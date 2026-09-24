@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>តាមដានកញ្ចប់ទំនិញ - SpeedyLogistics Tracking</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 py-4 px-6 shadow-sm">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
+                    <i data-lucide="truck" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base text-slate-900 leading-tight">SpeedyLogistics</h1>
+                    <p class="text-[11px] text-slate-500">ប្រព័ន្ធតាមដានកញ្ចប់ទំនិញអនឡាញ (Public Tracking)</p>
+                </div>
+            </a>
+            <a href="index.html" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 transition">
+                <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                <span>ផ្ទាំង Admin Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
+
+        <!-- Search Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm text-center space-y-4">
+            <h2 class="text-xl md:text-2xl font-bold text-slate-800">ស្វែងរក និងតាមដានកញ្ចប់ទំនិញរបស់អ្នក</h2>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+                បញ្ចូលលេខកូដតាមដានទំនិញរបស់អ្នក (ឧទាហរណ៍៖ <button onclick="quickSearch('LOG-KH-88219')" class="text-blue-600 underline font-semibold">LOG-KH-88219</button> ឬ <button onclick="quickSearch('LOG-KH-88220')" class="text-blue-600 underline font-semibold">LOG-KH-88220</button>)
+            </p>
+
+            <form onsubmit="handleSearch(event)" class="max-w-lg mx-auto flex items-center gap-2">
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-3.5 top-3"></i>
+                    <input id="trackingInput" type="text" placeholder="បញ្ចូលលេខកូដ (Waybill ID)..." value="LOG-KH-88219" class="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none uppercase transition">
+                </div>
+                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center gap-2">
+                    <span>ស្វែងរក</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Result Container -->
+        <div id="trackingResult" class="hidden space-y-6">
+
+            <!-- Summary Top Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <div class="text-xs text-slate-400 font-medium">លេខកូដកញ្ចប់ទំនិញ (Tracking ID)</div>
+                        <div id="res-tracking-id" class="text-xl font-black text-blue-600 tracking-wide"></div>
+                    </div>
+                    <div id="res-status-badge"></div>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="py-4">
+                    <div class="grid grid-cols-4 gap-2 text-center text-xs relative">
+                        <div id="step-pending" class="space-y-1">
+                            <div class="w-8 h-8 mx-auto rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold">1</div>
+                            <div class="font-medium text-slate-700">រង់ចាំយក</div>
+                        </div>
+                        <div id="step-picked_up" class="space-y-1">
+                            <div class="w-8 h-8 mx-auto rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold">2</div>
+                            <div class="font-medium text-slate-700">បានទៅយក</div>
+                        </div>
+                        <div id="step-in_warehouse" class="space-y-1">
+                            <div class="w-8 h-8 mx-auto rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold">3</div>
+                            <div class="font-medium text-slate-700">ដល់ឃ្លាំង</div>
+                        </div>
+                        <div id="step-delivered" class="space-y-1">
+                            <div class="w-8 h-8 mx-auto rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold">4</div>
+                            <div class="font-medium text-slate-700">បានប្រគល់</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sender & Receiver Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-xs border border-slate-100">
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">ទីតាំងផ្ញើចេញ</span>
+                        <div id="res-sender-name" class="font-bold text-slate-800 text-sm mt-0.5"></div>
+                        <div id="res-sender-address" class="text-slate-500 mt-1"></div>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">គោលដៅអ្នកទទួល</span>
+                        <div id="res-receiver-name" class="font-bold text-slate-800 text-sm mt-0.5"></div>
+                        <div id="res-receiver-address" class="text-slate-500 mt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Package & COD Specs -->
+                <div class="grid grid-cols-3 gap-3 text-xs pt-2">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="text-slate-400 block">មុខទំនិញ</span>
+                        <b id="res-item-desc" class="text-slate-800"></b>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span class="text-slate-400 block">ទម្ងន់</span>
+                        <b id="res-weight" class="text-slate-800"></b>
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                        <span class="text-amber-700 block font-medium">ប្រាក់ទំនិញ COD</span>
+                        <b id="res-cod" class="text-amber-900 text-sm"></b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Timeline History -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-sm mb-4">កាលប្បវត្តិធ្វើដំណើរនៃកញ្ចប់ទំនិញ (Tracking History)</h3>
+                <div id="res-timeline" class="space-y-1">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Not Found Message -->
+        <div id="notFoundMessage" class="hidden bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-3">
+            <i data-lucide="package-x" class="w-12 h-12 text-slate-300 mx-auto"></i>
+            <h3 class="font-bold text-slate-700 text-base">រកមិនឃើញលេខកូដទំនិញនេះទេ</h3>
+            <p class="text-xs text-slate-400">សូមពិនិត្យមើលលេខកូដកញ្ចប់ទំនិញឡើងវិញ ហើយព្យាយាមម្តងទៀត។</p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
+        <p>&copy; 2026 SpeedyLogistics Cambodia. រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
+        <p class="mt-1">សេវាបម្រើអតិថិជន៖ 012 345 678 / 098 765 432</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            // Auto search default value
+            handleSearch(new Event('submit'));
+        });
+
+        function getStoredData() {
+            const saved = localStorage.getItem('speedy_logistics_data');
+            if (saved) {
+                try { return JSON.parse(saved); } catch (e) { }
+            }
+            return INITIAL_DATA;
+        }
+
+        function quickSearch(id) {
+            document.getElementById('trackingInput').value = id;
+            handleSearch(new Event('submit'));
+        }
+
+        function handleSearch(e) {
+            e.preventDefault();
+            const id = document.getElementById('trackingInput').value.trim().toUpperCase();
+            if (!id) return;
+
+            const data = getStoredData();
+            const shipment = data.shipments.find(s => s.id.toUpperCase() === id || (s.barcode && s.barcode.toUpperCase() === id));
+
+            const resultContainer = document.getElementById('trackingResult');
+            const notFoundEl = document.getElementById('notFoundMessage');
+
+            if (!shipment) {
+                resultContainer.classList.add('hidden');
+                notFoundEl.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            notFoundEl.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            document.getElementById('res-tracking-id').innerText = shipment.id;
+            document.getElementById('res-status-badge').innerHTML = getStatusBadge(shipment.status);
+            document.getElementById('res-sender-name').innerText = shipment.sender.name;
+            document.getElementById('res-sender-address').innerText = shipment.sender.address;
+            document.getElementById('res-receiver-name').innerText = shipment.receiver.name;
+            document.getElementById('res-receiver-address').innerText = shipment.receiver.address;
+            document.getElementById('res-item-desc').innerText = shipment.packageInfo.itemDescription;
+            document.getElementById('res-weight').innerText = `${shipment.packageInfo.weight} kg`;
+            document.getElementById('res-cod').innerText = `$${(shipment.financials.codAmount || 0).toFixed(2)}`;
+
+            // Update Progress Steps UI
+            updateProgressSteps(shipment.status);
+
+            // Render Timeline
+            const timelineEl = document.getElementById('res-timeline');
+            timelineEl.innerHTML = [...shipment.timeline].reverse().map(item => `
+                <div class="relative pl-10 pb-5 timeline-item">
+                    <div class="absolute left-2.5 top-0 w-5 h-5 rounded-full bg-blue-600 border-4 border-white shadow"></div>
+                    <div class="text-xs text-slate-400">${item.time}</div>
+                    <div class="font-bold text-slate-800 text-sm mt-0.5">${getStatusKhmerText(item.status)}</div>
+                    <div class="text-xs text-slate-600 mt-0.5">${item.note || ''}</div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function updateProgressSteps(status) {
+            const steps = ['pending', 'picked_up', 'in_warehouse', 'delivered'];
+            const stepOrder = { 'pending': 1, 'picked_up': 2, 'in_warehouse': 3, 'out_for_delivery': 3, 'delivered': 4, 'returned': 2 };
+            const currentLevel = stepOrder[status] || 1;
+
+            steps.forEach((step, idx) => {
+                const el = document.getElementById(`step-${step}`);
+                if (!el) return;
+                const circle = el.querySelector('div:first-child');
+                if (idx + 1 <= currentLevel) {
+                    circle.classList.remove('bg-slate-200', 'text-slate-500');
+                    circle.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                } else {
+                    circle.classList.add('bg-slate-200', 'text-slate-500');
+                    circle.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                }
+            });
+        }
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'pending': return `<span class="badge-pending px-3 py-1 rounded-full text-xs font-semibold">រង់ចាំចាត់ចែង (Pending)</span>`;
+                case 'picked_up': return `<span class="badge-picked_up px-3 py-1 rounded-full text-xs font-semibold">បានទៅយក (Picked Up)</span>`;
+                case 'in_warehouse': return `<span class="badge-in_warehouse px-3 py-1 rounded-full text-xs font-semibold">ដល់ឃ្លាំង (In Hub)</span>`;
+                case 'out_for_delivery': return `<span class="badge-out_for_delivery px-3 py-1 rounded-full text-xs font-semibold">កំពុងចេញដឹក (Out for Delivery)</span>`;
+                case 'delivered': return `<span class="badge-delivered px-3 py-1 rounded-full text-xs font-semibold">ជោគជ័យ (Delivered)</span>`;
+                case 'returned': return `<span class="badge-returned px-3 py-1 rounded-full text-xs font-semibold">ត្រឡប់មកវិញ (Returned)</span>`;
+                default: return `<span class="bg-slate-100 text-slate-700 px-3 py-1 rounded text-xs">${status}</span>`;
+            }
+        }
+
+        function getStatusKhmerText(status) {
+            switch (status) {
+                case 'pending': return 'បានបង្កើតកញ្ចប់ទំនិញ (Order Created)';
+                case 'picked_up': return 'បានទៅយកពីអ្នកផ្ញើ (Picked Up)';
+                case 'in_warehouse': return 'បានចូលដល់ឃ្លាំងកណ្តាល (In Warehouse Hub)';
+                case 'out_for_delivery': return 'កំពុងចេញដឹកជញ្ជូន (Out for Delivery)';
+                case 'delivered': return 'ដឹកជញ្ជូនជោគជ័យ (Delivered)';
+                case 'returned': return 'ដឹកមិនបានសម្រេច / ត្រឡប់ (Returned)';
+                default: return status;
+            }
+        }
+    </script>
+</body>
+</html>
